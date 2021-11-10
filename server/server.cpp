@@ -12,7 +12,7 @@
 
 #define TRUE 1
 #define FALSE 0
-//#define PORT 3000
+//#define port 3000
 #include <iostream>
 #include <cstring>
 #include <fstream>
@@ -79,6 +79,7 @@ int getlist(std::vector <stclient*> &list_clients)
 
 int main(int argc , char *argv[])
 {
+
     if(argc != 2)
     {
         cerr << "Usage: port" << endl; exit(0); 
@@ -386,7 +387,22 @@ int main(int argc , char *argv[])
                                               j["id"]=id;
                                               idMessage=mes->id;
                                               fdSender=list_sessions[session]->fd;
-                                              idSession=session;
+                                          //    ищем текущего пользователя по сессии
+
+
+                                              for (auto cl: list_sessions) {
+
+                                                  if( (cl->fd==sd) && (cl->fd>0) )
+                                                  {
+
+                                                      idSession=cl->id;
+                                                      break;
+                                                  }
+                                              }
+
+
+
+
 
                                              }
                                             else
@@ -435,6 +451,16 @@ int main(int argc , char *argv[])
                                               j["id"]=id;
                                               idMessage=mes->id;
                                               idSession=session;
+
+                                              for (auto cl: list_sessions) {
+
+                                                  if( (cl->fd==sd) && (cl->fd>0) )
+                                                  {
+                                                      idSession=cl->id;
+                                                      break;
+                                                  }
+                                              }
+
                                           }
 
                                           else { //err no auth
@@ -512,13 +538,11 @@ int main(int argc , char *argv[])
 
 
           //РАССЫЛКА СООБЩЕНИЙ ВСЕМ ПОЛЬЗОВАТЕЛЯМ
-                                  if (idMessage>-1)
+
+                               if (idMessage>-1)
                                   {
                                       if(fdSender>0)
                                       {
-                                          if (FD_ISSET( list_sessions[ idSession]->fd , &readfds)  )
-                                          {
-
                                               string strmsg;
                                               char str[10];
                                               sprintf (str, "%s (личное):",list_clients[ list_sessions[ idSession]->id_client] ->name);
@@ -529,8 +553,7 @@ int main(int argc , char *argv[])
 
                                               printf("MESSAGE %s \n",  strmsg.c_str());
 
-                                              send(list_sessions[ idSession]->fd , strmsg.c_str() ,  strmsg.size(), 0 );
-                                          }
+                                              send(fdSender , strmsg.c_str() ,  strmsg.size(), 0 );
                                       }
                                         else
                                           {
@@ -540,15 +563,14 @@ int main(int argc , char *argv[])
                                                   if (sl->fd>0 && sl->isAuthorization)
 
                                                   {
-
-                                                      if (FD_ISSET( sl->fd , &readfds)  )
+                                                      if ( sl->fd !=sd )
                                                       {
 
                                                           string strmsg;
-                                                          int f=list_sessions[ idSession]->id_client;
                                                           string fff=list_clients[ list_sessions[ idSession]->id_client] ->name;
 
-                                                        strmsg.append(" :");
+                                                    	  strmsg.append(fff);
+                                                          strmsg.append(": ");
                                                           strmsg.append(list_messages[idMessage]->body, strlen(list_messages[idMessage]->body));
                                                           strmsg.append("\r\n");
 
@@ -561,6 +583,7 @@ int main(int argc , char *argv[])
 
                                       }
                                   }
+
               }
 
         }

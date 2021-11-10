@@ -119,7 +119,7 @@ void *write (void *dummyPt)
                getline(cin,send_login);
 
                if (send_login.size()>0)
-                        object["send_login"]=send_login.c_str();
+                        object["sender_login"]=send_login;
 
                object["command"]="message";
                object["id"]=id;
